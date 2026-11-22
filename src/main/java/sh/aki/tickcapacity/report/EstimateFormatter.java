@@ -53,13 +53,13 @@ public final class EstimateFormatter {
         for (CapacityEstimate.Note note : e.notesOrEmpty()) {
             String key = "note." + note.key();
             if (m.has(key)) {
-                out.add(line(key, formatNoteValue(note)));
+                out.add(line(key, noteValue(note)));
             }
         }
         return out;
     }
 
-    private static String formatNoteValue(CapacityEstimate.Note note) {
+    static String noteValue(CapacityEstimate.Note note) {
         double v = note.value();
         if (Double.isNaN(v)) {
             return "";
