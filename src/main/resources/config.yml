@@ -1,0 +1,105 @@
+# ---------------------------------------------------------------------------
+# TickCapacity configuration
+# Docs: see README.md. After editing, run /tickcapacity reload
+# ---------------------------------------------------------------------------
+
+# Message language: auto (use the server's JVM locale), en, ja
+language: auto
+
+# Passive sampling during normal gameplay. This is the most accurate data source
+# for capacity estimation, because it measures your real players on your real world.
+sampling:
+  enabled: true
+  # Length of one sample window. Each window stores mean/p50/p95/p99/max MSPT.
+  interval-seconds: 10
+  # Ignore the first N seconds after startup (JIT warm-up, spawn chunk loading).
+  startup-grace-seconds: 180
+  # Delete sample files older than this many days.
+  retention-days: 30
+
+estimation:
+  # How many days of samples are used for /tickcapacity estimate.
+  history-days: 14
+  # Mean MSPT at which the server can no longer keep 20 TPS (vanilla: 50 ms).
+  limit-mspt: 50.0
+  # "Comfortable" means: mean MSPT <= comfortable-mspt AND p95 MSPT <= comfortable-p95-mspt.
+  # The default leaves ~40% headroom for spikes such as autosaves and chunk generation.
+  comfortable-mspt: 30.0
+  comfortable-p95-mspt: 50.0
+  # Confidence level for the reported intervals.
+  confidence-level: 0.95
+  # Minimum usable samples before an estimate is attempted.
+  min-samples: 30
+  # A player count is only used if it was seen in at least this many samples.
+  min-samples-per-player-count: 3
+  # Caps the regression weight of one player count, so idle hours do not dominate.
+  group-weight-cap: 20
+  # Calibrate benchmarks with real-gameplay data once it reaches medium confidence
+  # (stored in calibration.json; shown in /tc capacity details, reset with /tc admin calibration-reset).
+  use-calibration: true
+
+# Synthetic load benchmark (/tickcapacity bench start).
+# Runs in a separate, dedicated world and never modifies your existing worlds.
+benchmark:
+  world-name: tickcapacity_benchmark
+  # Fixed seed => the same terrain every run => comparable results.
+  seed: 20261122
+  # Keep the benchmark world between runs (faster, and keeps runs reproducible). It then stays loaded
+  # but empty after a benchmark (no measurable cost) instead of being unloaded, because unloading a world
+  # right after a benchmark makes the server wait for thousands of chunk writes.
+  # If false, the world folder is deleted after each run (after its chunk writes have drained).
+  keep-world: true
+  # Upper bound of virtual players.
+  max-virtual-players: 40
+  # Virtual players added per stage. 0 = automatic: big steps while the server has headroom,
+  # small steps near the limit (far fewer stages than a fixed step).
+  players-per-stage: 0
+  # Seconds to wait after new virtual players are ready, before measuring.
+  settle-seconds: 5
+  # Seconds measured per stage.
+  stage-seconds: 20
+  # Radius in chunks kept ticking around each virtual player. -1 = server simulation-distance.
+  chunk-radius: -1
+  # Emergency stop: if the 5-second rolling mean MSPT exceeds this, the benchmark stops immediately.
+  # The benchmark also stops safely when the heap is nearly full (memory is then reported as the limit).
+  abort-mspt: 80.0
+  # Refuse to start while other players are online (override with: bench start force).
+  # The operator who starts the benchmark in-game is not counted.
+  require-empty-server: true
+  # Where progress is shown to the operator who started the benchmark and to admins.
+  # Any of: bossbar, actionbar, tab. Use [] to show progress in chat only.
+  progress-display: [bossbar]
+  # Virtual players walk in a straight line at this speed (blocks/s) and generate new terrain,
+  # like players exploring. 0 = stand still (default, reproducible). Walking is ~4.3, sprinting ~5.6.
+  # With movement, the benchmark world is deleted after each benchmark so every run explores fresh terrain.
+  movement-blocks-per-second: 0
+  # Upper limit for "/tickcapacity bench start <runs>".
+  max-repetitions: 5
+  # Mobs spawned per virtual player. Roughly what a survival player has around them.
+  entities-per-player:
+    ZOMBIE: 12
+    SKELETON: 8
+    SPIDER: 4
+    CREEPER: 4
+    COW: 5
+    SHEEP: 5
+    PIG: 3
+    CHICKEN: 4
+
+# Live display toggled per player with /tickcapacity monitor (requires tickcapacity.use).
+monitor:
+  # Displays used by "/tickcapacity monitor" without arguments. Any of: bossbar, actionbar, tab.
+  default-display: [bossbar]
+
+# Alerts to online admins (tickcapacity.admin), the console and optionally Discord.
+alerts:
+  enabled: true
+  # Alert when the 30-second average MSPT stays at or above this for sustain-seconds.
+  mspt-threshold: 45.0
+  sustain-seconds: 30
+  # Alert when online players exceed the recommended / limit estimate (only with medium+ confidence).
+  capacity: true
+  # Minimum minutes between two alerts of the same kind.
+  cooldown-minutes: 10
+  # Discord webhook URL (Server Settings > Integrations > Webhooks). Empty = disabled.
+  discord-webhook: ""

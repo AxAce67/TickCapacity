@@ -1,0 +1,18 @@
+name: TickCapacity
+version: '${version}'
+main: sh.aki.tickcapacity.TickCapacityPlugin
+api-version: '1.20.6'
+load: POSTWORLD
+description: Measures server performance and estimates recommended and maximum concurrent players.
+authors: [AxAce67]
+website: https://github.com/AxAce67/TickCapacity
+
+permissions:
+  tickcapacity.use:
+    description: View performance status, hardware info, estimates, analysis and saved results.
+    default: op
+  tickcapacity.admin:
+    description: Run benchmarks, write reports and reload the configuration.
+    default: op
+    children:
+      tickcapacity.use: true
