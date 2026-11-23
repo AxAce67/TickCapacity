@@ -4,7 +4,7 @@
 #
 #   ./gradlew build && scripts/smoke-test.sh 1.20.6 1.21.4 26.3
 #
-# Server jars are downloaded from PaperMC (checksum verified) into run/smoke/<version>/ and reused.
+# Server jars are downloaded from PaperMC or Purpur ("purpur-1.21.4"; checksums verified) into run/smoke/<version>/ and reused.
 # Requires: java (21+), curl, python3. Set JAVA=/path/to/java to run the servers on a specific JDK.
 set -uo pipefail
 
@@ -15,6 +15,32 @@ JAVA="${JAVA:-java}"
 
 sha256() {
   if command -v sha256sum >/dev/null; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi
+}
+md5() {
+  if command -v md5sum >/dev/null; then md5sum "$1" | cut -d' ' -f1; else md5 -q "$1"; fi
+}
+
+# download <version> <target>: "1.21.4" is Paper, "purpur-1.21.4" is Purpur. Checksums are verified.
+download() {
+  local v="$1" target="$2" meta url sum actual
+  echo "[$v] downloading..."
+  if [[ "$v" == purpur-* ]]; then
+    v="${v#purpur-}"
+    meta="$(curl -fsSL -A "$UA" "https://api.purpurmc.org/v2/purpur/$v/latest")" || { echo "[$1] FAIL: unknown version"; return 1; }
+    url="https://api.purpurmc.org/v2/purpur/$v/$(python3 -c 'import json,sys;print(json.load(sys.stdin)["build"])' <<<"$meta")/download"
+    sum="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["md5"])' <<<"$meta")"
+    curl -fsSL -A "$UA" -o "$target.part" "$url" || { echo "[$1] FAIL: download"; return 1; }
+    actual="$(md5 "$target.part")"
+  else
+    meta="$(curl -fsSL -A "$UA" "https://fill.papermc.io/v3/projects/paper/versions/$v/builds/latest")" || {
+      echo "[$1] FAIL: unknown version"; return 1; }
+    url="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["downloads"]["server:default"]["url"])' <<<"$meta")"
+    sum="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["downloads"]["server:default"]["checksums"]["sha256"])' <<<"$meta")"
+    curl -fsSL -A "$UA" -o "$target.part" "$url" || { echo "[$1] FAIL: download"; return 1; }
+    actual="$(sha256 "$target.part")"
+  fi
+  [ "$actual" = "$sum" ] || { echo "[$1] FAIL: checksum mismatch"; rm -f "$target.part"; return 1; }
+  mv "$target.part" "$target"
 }
 [ -n "$PLUGIN_JAR" ] || { echo "Build first: ./gradlew build"; exit 2; }
 [ $# -gt 0 ] || { echo "usage: $0 <paper-version>..."; exit 2; }
@@ -33,15 +59,7 @@ for V in "$@"; do
   DIR="$ROOT/run/smoke/$V"
   mkdir -p "$DIR/plugins/TickCapacity"
   if [ ! -f "$DIR/paper.jar" ]; then
-    echo "[$V] downloading Paper..."
-    meta="$(curl -fsSL -A "$UA" "https://fill.papermc.io/v3/projects/paper/versions/$V/builds/latest")" || {
-      echo "[$V] FAIL: unknown version"; overall=1; continue; }
-    url="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["downloads"]["server:default"]["url"])' <<<"$meta")"
-    sha="$(python3 -c 'import json,sys;print(json.load(sys.stdin)["downloads"]["server:default"]["checksums"]["sha256"])' <<<"$meta")"
-    curl -fsSL -A "$UA" -o "$DIR/paper.jar.part" "$url" || { echo "[$V] FAIL: download"; overall=1; continue; }
-    actual="$(sha256 "$DIR/paper.jar.part")"
-    [ "$actual" = "$sha" ] || { echo "[$V] FAIL: checksum mismatch"; rm -f "$DIR/paper.jar.part"; overall=1; continue; }
-    mv "$DIR/paper.jar.part" "$DIR/paper.jar"
+    download "$V" "$DIR/paper.jar" || { overall=1; continue; }
   fi
   cp "$PLUGIN_JAR" "$DIR/plugins/"
   echo "eula=true" >"$DIR/eula.txt"
@@ -63,7 +81,7 @@ YAML
 
   : >"$DIR/cmd.txt"
   rm -f "$DIR/server.log"
-  (cd "$DIR" && tail -f cmd.txt | "$JAVA" -Xms1G -Xmx2G -jar paper.jar nogui >server.log 2>&1) &
+  (cd "$DIR" && tail -f "$DIR/cmd.txt" | "$JAVA" -Xms1G -Xmx2G -jar paper.jar nogui >server.log 2>&1) &
   send() { echo "$1" >>"$DIR/cmd.txt"; sleep 2; }
 
   result="PASS"
@@ -83,7 +101,7 @@ YAML
   echo "stop" >>"$DIR/cmd.txt"
   wait_for "$DIR/server.log" 'Disabling TickCapacity' 60
   sleep 5
-  pkill -f "tail -f cmd.txt" 2>/dev/null
+  pkill -f "tail -f $DIR/cmd.txt" 2>/dev/null
 
   log="$DIR/server.log"
   if [ "$result" = "PASS" ]; then
