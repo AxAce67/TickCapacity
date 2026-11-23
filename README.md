@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src=".github/icon.png" width="96" height="96" alt="">
+
 # TickCapacity
 
 Measures how your Minecraft server performs and estimates how many players it can handle

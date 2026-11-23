@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src=".github/icon.png" width="96" height="96" alt="">
+
 # TickCapacity
 
 Minecraft サーバーの性能を測り、快適に遊べる人数を推定するプラグイン
