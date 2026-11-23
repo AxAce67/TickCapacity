@@ -1,10 +1,12 @@
 # TickCapacity
 
-A Paper plugin that measures how your server performs and estimates how many players it can handle:
+**English** | [日本語](README.ja.md)
+
+Download: [GitHub Releases](https://github.com/AxAce67/TickCapacity/releases)
+
+A Minecraft server plugin (Paper / Purpur) that measures how your server performs and estimates how many players it can handle:
 a **recommended** count (still smooth) and a **limit** (where 20 TPS can no longer be held), each with an
 interval and a confidence level. When there is not enough data, it says so instead of guessing.
-
-[日本語版 README](README.ja.md)
 
 ```
 ━━━━ TickCapacity ━━━━

@@ -1,9 +1,11 @@
 # TickCapacity
 
-Paper サーバーの性能を測り、**快適に遊べる人数（推奨）**と **20 TPS を保てなくなる人数（限界）**を、
-区間と信頼度つきで推定するプラグインです。データが足りないときは、無理に数字を出さずにそう表示します。
+[English](README.md) | **日本語**
 
-[English README](README.md)
+ダウンロード: [GitHub Releases](https://github.com/AxAce67/TickCapacity/releases)
+
+Minecraft サーバー（Paper / Purpur）の性能を測り、**快適に遊べる人数（推奨）**と **20 TPS を保てなくなる人数（限界）**を、
+区間と信頼度つきで推定するプラグインです。データが足りないときは、無理に数字を出さずにそう表示します。
 
 ```
 ━━━━ TickCapacity ━━━━
