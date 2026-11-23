@@ -1,6 +1,15 @@
+<div align="center">
+
 # TickCapacity
 
+Minecraft サーバーの性能を測り、快適に遊べる人数を推定するプラグイン
+
+[![build](https://img.shields.io/github/actions/workflow/status/AxAce67/TickCapacity/ci.yml?branch=main&label=build)](https://github.com/AxAce67/TickCapacity/actions/workflows/ci.yml) [![release](https://img.shields.io/github/v/release/AxAce67/TickCapacity?include_prereleases&label=release)](https://github.com/AxAce67/TickCapacity/releases) [![license](https://img.shields.io/github/license/AxAce67/TickCapacity)](LICENSE)<br>
+![Minecraft](https://img.shields.io/badge/Minecraft-1.20.6%E2%80%9326.3-62B47A) ![server](https://img.shields.io/badge/server-Paper%20%7C%20Purpur-1E88E5) ![Java](https://img.shields.io/badge/Java-21%2B-E76F00)
+
 [English](README.md) | **日本語**
+
+</div>
 
 ダウンロード: [GitHub Releases](https://github.com/AxAce67/TickCapacity/releases)
 
